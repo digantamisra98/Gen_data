@@ -61,7 +61,7 @@ prompt_templates = [
     "Generate a photo of {class_name} that appears true to life.",
     "Produce an image of {class_name} with realistic details and lighting.",
     "Depict {class_name} in a photo with a high degree of visual realism.",
-    "A vintage photograph of {class_tname} with a warm, faded aesthetic.",
+    "A vintage photograph of {class_name} with a warm, faded aesthetic.",
     "Create a nostalgic photo of {class_name} with a warm, vintage tone and faded colors.",
     "Generate an image of {class_name} in the style of a vintage photograph, featuring a warm color palette and faded appearance.",
     "Produce a photo of {class_name} with a classic aesthetic, using a warm color scheme and a subtle vintage fade.",
