@@ -2,7 +2,7 @@
 export CUDA_VISIBLE_DEVICES=0
 
 dataset="cifar10"
-class_names=(airplanes cars birds cats deer dogs frogs horses ships trucks)
+class_names=(airplane car bird cat deer dog frog horse ship truck)
 
 for class_name in "${class_names[@]}"; do
     output_dir="/home/mila/d/diganta.misra/scratch/sd_xl_images/$dataset/$class_name"
