@@ -86,7 +86,7 @@ refiner = DiffusionPipeline.from_pretrained(
 ).to("cuda")
 
 
-for prompt_template in prompt_templates:
+for count, prompt_template in enumerate(prompt_templates):
     prompt = prompt_template.format(class_name=class_name.lower())
     print(prompt)
 
@@ -122,7 +122,7 @@ for prompt_template in prompt_templates:
 
         print("Saving the generated images ...")
         for img in images:
-            img.save(f"{output_dir}/{start}.png")
+            img.save(f"{output_dir}/{count}_{start}.png")
             start += 1
 
         del image
