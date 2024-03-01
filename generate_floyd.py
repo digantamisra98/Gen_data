@@ -96,7 +96,7 @@ stage_3 = DiffusionPipeline.from_pretrained(
 # stage_3.enable_xformers_memory_efficient_attention() # remove line if torch.__version__ >= 2.0.0
 stage_3.enable_model_cpu_offload()
 
-for prompt_template in prompt_templates:
+for count, prompt_template in enumerate(prompt_templates):
     prompt = prompt_template.format(class_name=class_name.lower())
     print(prompt)
 
@@ -116,4 +116,4 @@ for prompt_template in prompt_templates:
             ).images
             image = stage_3(prompt=prompt, image=image, noise_level=100).images
         image = image[0]
-        image.save(f"{output_dir}/{i}.png")
+        image.save(f"{output_dir}/{count}_{i}.png")
