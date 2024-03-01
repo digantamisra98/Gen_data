@@ -1,9 +1,9 @@
 import os
 import sys
-from tqdm import tqdm
 
 import torch
 from diffusers import DiffusionPipeline
+from tqdm import tqdm
 
 os.environ["HF_TOKEN"] = "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"
 
@@ -66,30 +66,54 @@ prompt_templates = [
 ]
 
 print(f"Loading Floyd model - stage 1")
-stage_1 = DiffusionPipeline.from_pretrained("DeepFloyd/IF-I-XL-v1.0", variant="fp16", torch_dtype=torch.float16)
+stage_1 = DiffusionPipeline.from_pretrained(
+    "DeepFloyd/IF-I-XL-v1.0", variant="fp16", torch_dtype=torch.float16
+)
 # stage_1.enable_xformers_memory_efficient_attention() # remove line if torch.__version__ >= 2.0.0
 stage_1.enable_model_cpu_offload()
 
 print(f"Loading Floyd model - stage 2")
-stage_2 = DiffusionPipeline.from_pretrained("DeepFloyd/IF-II-L-v1.0", text_encoder=None, variant="fp16", torch_dtype=torch.float16)
+stage_2 = DiffusionPipeline.from_pretrained(
+    "DeepFloyd/IF-II-L-v1.0",
+    text_encoder=None,
+    variant="fp16",
+    torch_dtype=torch.float16,
+)
 # stage_2.enable_xformers_memory_efficient_attention() # remove line if torch.__version__ >= 2.0.0
 stage_2.enable_model_cpu_offload()
 
 print(f"Loading Floyd model - stage 3")
-safety_modules = {"feature_extractor": stage_1.feature_extractor, "safety_checker": stage_1.safety_checker, "watermarker": stage_1.watermarker}
-stage_3 = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-x4-upscaler", **safety_modules, torch_dtype=torch.float16)
+safety_modules = {
+    "feature_extractor": stage_1.feature_extractor,
+    "safety_checker": stage_1.safety_checker,
+    "watermarker": stage_1.watermarker,
+}
+stage_3 = DiffusionPipeline.from_pretrained(
+    "stabilityai/stable-diffusion-x4-upscaler",
+    **safety_modules,
+    torch_dtype=torch.float16,
+)
 # stage_3.enable_xformers_memory_efficient_attention() # remove line if torch.__version__ >= 2.0.0
 stage_3.enable_model_cpu_offload()
 
 for prompt_template in prompt_templates:
     prompt = prompt_template.format(class_name=class_name.lower())
     print(prompt)
-    
+
     for i in tqdm(range(images_per_class)):
         with torch.inference_mode():
             prompt_embeds, negative_embeds = stage_1.encode_prompt(prompt)
-            image = stage_1(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_embeds, output_type="pt").images
-            image = stage_2(image=image, prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_embeds, output_type="pt").images
+            image = stage_1(
+                prompt_embeds=prompt_embeds,
+                negative_prompt_embeds=negative_embeds,
+                output_type="pt",
+            ).images
+            image = stage_2(
+                image=image,
+                prompt_embeds=prompt_embeds,
+                negative_prompt_embeds=negative_embeds,
+                output_type="pt",
+            ).images
             image = stage_3(prompt=prompt, image=image, noise_level=100).images
         image = image[0]
         image.save(f"{output_dir}/{i}.png")
