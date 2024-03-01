@@ -1,9 +1,11 @@
 import os
 import sys
+from tqdm import tqdm
 
 import torch
 from diffusers import DiffusionPipeline
-from tqdm import tqdm
+
+os.environ["HF_TOKEN"] = "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"
 
 class_name = sys.argv[1]
 output_dir = sys.argv[2]
@@ -21,11 +23,6 @@ prompt_templates = [
     "Detailed, high-resolution image of {class_name} showcasing its intricate features.",
     "Sharp, high-resolution photo of {class_name} capturing every minute detail.",
     "Crystal clear photo of {class_name} in high resolution, showing fine textures and patterns.",
-    "A macro photography image of {class_name} showcasing unique textures.",
-    "Extreme close-up photo of {class_name} revealing its unique textural details.",
-    "Magnified image of {class_name} highlighting its fascinating textures and patterns.",
-    "Macro photography of {class_name} showcasing the intricate details of its surface.",
-    "Close-up view of {class_name} showcasing its unique textures through macro photography.",
     "A minimalist image of {class_name} using clean lines and muted colors.",
     "Simple and elegant photo of {class_name} featuring clean lines and muted tones.",
     "Minimalist composition of {class_name} with clean lines and a subdued color palette.",
@@ -68,62 +65,31 @@ prompt_templates = [
     "Depict {class_name} in a photo reminiscent of old times, with a warm, faded aesthetic and a vintage feel.",
 ]
 
+print(f"Loading Floyd model - stage 1")
+stage_1 = DiffusionPipeline.from_pretrained("DeepFloyd/IF-I-XL-v1.0", variant="fp16", torch_dtype=torch.float16)
+# stage_1.enable_xformers_memory_efficient_attention() # remove line if torch.__version__ >= 2.0.0
+stage_1.enable_model_cpu_offload()
 
-pipe = DiffusionPipeline.from_pretrained(
-    "stabilityai/stable-diffusion-xl-base-1.0",
-    torch_dtype=torch.float16,
-    variant="fp16",
-    use_safetensors=True,
-).to("cuda")
+print(f"Loading Floyd model - stage 2")
+stage_2 = DiffusionPipeline.from_pretrained("DeepFloyd/IF-II-L-v1.0", text_encoder=None, variant="fp16", torch_dtype=torch.float16)
+# stage_2.enable_xformers_memory_efficient_attention() # remove line if torch.__version__ >= 2.0.0
+stage_2.enable_model_cpu_offload()
 
-refiner = DiffusionPipeline.from_pretrained(
-    "stabilityai/stable-diffusion-xl-refiner-1.0",
-    text_encoder_2=pipe.text_encoder_2,
-    vae=pipe.vae,
-    torch_dtype=torch.float16,
-    use_safetensors=True,
-    variant="fp16",
-).to("cuda")
+print(f"Loading Floyd model - stage 3")
+safety_modules = {"feature_extractor": stage_1.feature_extractor, "safety_checker": stage_1.safety_checker, "watermarker": stage_1.watermarker}
+stage_3 = DiffusionPipeline.from_pretrained("stabilityai/stable-diffusion-x4-upscaler", **safety_modules, torch_dtype=torch.float16)
+# stage_3.enable_xformers_memory_efficient_attention() # remove line if torch.__version__ >= 2.0.0
+stage_3.enable_model_cpu_offload()
 
-
-for count, prompt_template in enumerate(prompt_templates):
+for prompt_template in prompt_templates:
     prompt = prompt_template.format(class_name=class_name.lower())
     print(prompt)
-
-    for i in tqdm(range(0, images_per_class, batch_size)):
-        start, end = i, int(min(images_per_class, i + batch_size))
-        inputs = {
-            "prompt": [prompt] * (end - start),
-            "generator": [
-                torch.Generator("cuda").manual_seed(i) for i in range(start, end)
-            ],
-            "num_inference_steps": 40,
-            "denoising": 0.8,
-        }
-
+    
+    for i in tqdm(range(images_per_class)):
         with torch.inference_mode():
-            print("Base image generation ...")
-            image = pipe(
-                prompt=inputs["prompt"],
-                generator=inputs["generator"],
-                num_inference_steps=inputs["num_inference_steps"],
-                denoising_end=inputs["denoising"],
-                output_type="latent",
-            ).images
-
-            print("Refining base images ...")
-            images = refiner(
-                prompt=inputs["prompt"],
-                generator=inputs["generator"],
-                num_inference_steps=inputs["num_inference_steps"],
-                denoising_start=inputs["denoising"],
-                image=image,
-            ).images
-
-        print("Saving the generated images ...")
-        for img in images:
-            img.save(f"{output_dir}/{count}_{start}.png")
-            start += 1
-
-        del image
-        torch.cuda.empty_cache()
+            prompt_embeds, negative_embeds = stage_1.encode_prompt(prompt)
+            image = stage_1(prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_embeds, output_type="pt").images
+            image = stage_2(image=image, prompt_embeds=prompt_embeds, negative_prompt_embeds=negative_embeds, output_type="pt").images
+            image = stage_3(prompt=prompt, image=image, noise_level=100).images
+        image = image[0]
+        image.save(f"{output_dir}/{i}.png")

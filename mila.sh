@@ -1,5 +1,5 @@
 #!/bin/bash
-#SBATCH --time=12:00:00
+#SBATCH --time=3:00:00
 #SBATCH -c 8
 #SBATCH --job-name=gen_sdxl
 #SBATCH --mem=16G
@@ -8,11 +8,11 @@
 #SBATCH --output=$SCRATCH/sdxl-%j.out
 #SBATCH --error=$SCRATCH/sdxl-%j.err
 
-pyfile=/home/mila/d/diganta.misra/projects/Gen_data/generate.py
+pyfile=/home/mila/d/diganta.misra/projects/Gen_data/generate_floyd.py
 
 module load anaconda/3
 
-conda activate /home/mila/d/diganta.misra/.conda/envs/sparse
+conda activate /home/mila/d/diganta.misra/.conda/envs/floyd
 
 ulimit -Sn $(ulimit -Hn)
 
