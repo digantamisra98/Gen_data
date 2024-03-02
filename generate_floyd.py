@@ -1,10 +1,10 @@
+import argparse
 import os
 import sys
 
 import torch
 from diffusers import DiffusionPipeline
 from tqdm import tqdm
-import argparse
 
 os.environ["HF_TOKEN"] = "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"
 
