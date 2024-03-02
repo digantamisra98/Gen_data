@@ -1,12 +1,12 @@
 #!/bin/bash
 #SBATCH --time=12:00:00
 #SBATCH -c 8
-#SBATCH --job-name=gen_sdxl
+#SBATCH --job-name=gen_floyd_domainnet
 #SBATCH --mem=36G
 #SBATCH --gres=gpu:rtx8000:1
 #SBATCH --signal=SIGUSR1@90 # 90 seconds before time limit
-#SBATCH --output=$SCRATCH/sdxl-%j.out
-#SBATCH --error=$SCRATCH/sdxl-%j.err
+#SBATCH --output=$SCRATCH/floyd-%j.out
+#SBATCH --error=$SCRATCH/floyd-%j.err
 
 pyfile=/home/mila/d/diganta.misra/projects/Gen_data/generate_floyd.py
 
