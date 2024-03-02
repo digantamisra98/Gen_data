@@ -16,4 +16,4 @@ conda activate /home/mila/d/diganta.misra/.conda/envs/floyd
 
 ulimit -Sn $(ulimit -Hn)
 
-python3 $pyfile --class_name $1 --output_dir $2 --images_per_class $3
+python3 $pyfile $1 $2 $3

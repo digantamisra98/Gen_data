@@ -8,18 +8,9 @@ import argparse
 
 os.environ["HF_TOKEN"] = "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"
 
-# define class_name and output_dir as argparse arguments
-parser = argparse.ArgumentParser(description="Prune Train")
-parser.add_argument(
-    "--class_name", type=str, help="class_name"
-)
-parser.add_argument("--output_dir", type=str, help="output_dir")
-parser.add_argument("--images_per_class", type=int, default=10, help="images_per_class")
-
-args = parser.parse_args()
-class_name = args.class_name
-output_dir = args.output_dir
-images_per_class = args.images_per_class
+class_name = sys.argv[1]
+output_dir = sys.argv[2]
+images_per_class = int(sys.argv[3])
 
 prompt_templates = [
     "A black and white image of {class_name} highlighting dramatic contrasts.",
