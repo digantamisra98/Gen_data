@@ -33,7 +33,7 @@ prompt_templates = [
     "Image of {class_name} showcasing a cohesive color scheme using analogous colors.",
     "Photo of {class_name} where the colors naturally complement each other, following an analogous color scheme.",
     "{class_name} image with a pleasing color palette using analogous colors that sit next to each other on the color wheel.",
-    "l Prompt: A photo of {class_name} in complementary colors.",
+    "Prompt: A photo of {class_name} in complementary colors.",
     "Image of {class_name} featuring contrasting yet balanced colors, using a complementary color scheme.",
     "Photo of {class_name} where the colors create a sense of visual tension through complementary colors.",
     "{class_name} image with a vibrant color palette using complementary colors that sit opposite each other on the color wheel.",
